@@ -1,14 +1,15 @@
 # import packages
 import bs4
+import requests
 from bs4 import BeautifulSoup
 
 # get soup object
 def get_soup(text):
-	return BeautifulSoup(text, "lxml", from_encoding="utf-8")
+    return BeautifulSoup(text, "lxml")
 
 
 # extract company
-def extract_company(div): 
+def extract_company(div):
     company = div.find_all(name="span", attrs={"class":"company"})
     if len(company) > 0:
         for b in company:
@@ -21,7 +22,7 @@ def extract_company(div):
 
 
 # extract job salary
-def extract_salary(div): 
+def extract_salary(div):
     try:
         return (div.find('nobr').text)
     except:
@@ -49,15 +50,15 @@ def extract_job_title(div):
 
 
 # extract jd summary
-def extract_summary(div): 
+def extract_summary(div):
     spans = div.findAll('span', attrs={'class': 'summary'})
     for span in spans:
         return (span.text.strip())
     return 'NOT_FOUND'
- 
 
-# extract link of job description 
-def extract_link(div): 
+
+# extract link of job description
+def extract_link(div):
     for a in div.find_all(name='a', attrs={'data-tn-element':'jobTitle'}):
         return (a['href'])
     return('NOT_FOUND')
@@ -78,12 +79,13 @@ def extract_date(div):
 def extract_fulltext(url):
     try:
         page = requests.get('http://www.indeed.com' + url)
-        soup = BeautifulSoup(page.text, "lxml", from_encoding="utf-8")
-        spans = soup.findAll('span', attrs={'class': 'summary'})
+        soup = BeautifulSoup(page.text, "html.parser")
+        spans = soup.findAll('div', attrs={'class': 'jobsearch-JobComponent-description'})
         for span in spans:
             return (span.text.strip())
-    except:
-        return 'NOT_FOUND'
+    except Exception as e:
+        print(e)
+
     return 'NOT_FOUND'
 
 
@@ -91,5 +93,5 @@ def extract_fulltext(url):
 def write_logs(text):
     # print(text + '\n')
     f = open('log.txt','a')
-    f.write(text + '\n')  
+    f.write(text + '\n')
     f.close()
