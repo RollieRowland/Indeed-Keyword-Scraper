@@ -10,14 +10,17 @@ import ntpath
 import random
 import numpy as np
 from collections import defaultdict
+import pandas as pd
 
-skillCSV = "C:/Users/Rollie/Documents/GitHub/IndeedScraper/Salary.csv"#https://www.tiobe.com/tiobe-index/
+title = "Languages"
+individualName = "Language"
+location = "languages"
+
+skillCSV = "C:/Users/Rollie/Documents/GitHub/IndeedScraper/languages2.csv"#https://www.tiobe.com/tiobe-index/
 citiesCSV = "C:/Users/Rollie/Documents/GitHub/IndeedScraper/cities.csv"
 statePopulationCSV = "C:/Users/Rollie/Documents/GitHub/IndeedScraper/us-population-by-state-and-count.csv"
 dataDirectory = "C:/Users/Rollie/Google Drive/School/Grad School/2019 Spring/Scholarship Seminar/Research Project (Scholarship Seminar)/Processed Data/LiveData2"
-
-title = "Salary"
-individualName = "Salary"
+csvSkillData = 'C:/Users/Rollie/Google Drive/School/Grad School/2019 Spring/Scholarship Seminar/Research Project (Scholarship Seminar)/CSVSkillData'
 
 cityData = list(csv.reader(open(citiesCSV, encoding='utf-8'), delimiter=","))
 statePopulationData = list(csv.reader(open(statePopulationCSV, encoding='utf-8'), delimiter=","))
@@ -28,8 +31,6 @@ topSkills = nestedDict()
 stateSkillsAll = nestedDict()
 stateSkillsQueries = nestedDict()
 Skills = []
-
-minimumDisplayCount = 20
 
 totalPopulation = 0
 
@@ -106,10 +107,10 @@ def createBarChart(filename,xAxis,yAxis,xName,yName,name):
 
     img_bytes = pio.to_image(fig, format='PNG', width=1600, height=960, scale=2)
 
-    if not os.path.exists('images/bar'):
-        os.mkdir('images/bar')
+    if not os.path.exists('images/' + location + '/bar'):
+        os.mkdir('images/' + location + '/bar')
 
-    with open('images/bar/' + filename + '.PNG', 'wb') as f:
+    with open('images/' + location + '/bar/' + filename + '.PNG', 'wb') as f:
         f.write(img_bytes)
     return
 
@@ -128,10 +129,10 @@ def createPieChart(filename,xAxis,yAxis,name):
 
     img_bytes = pio.to_image(fig, format='PNG', width=1600, height=960, scale=2)
 
-    if not os.path.exists('images/pie'):
-        os.mkdir('images/pie')
+    if not os.path.exists('images/' + location + '/pie'):
+        os.mkdir('images/' + location + '/pie')
 
-    with open('images/pie/' + filename + '.PNG', 'wb') as f:
+    with open('images/' + location + '/pie/' + filename + '.PNG', 'wb') as f:
         f.write(img_bytes)
     return
 
@@ -220,15 +221,25 @@ def writeTopSkills():
     sorted_topSkills = sorted(topSkills, key=topSkills.__getitem__, reverse=True)
 
     for k in sorted_topSkills:
-        if topSkills[k] < minimumDisplayCount:
-            sorted_topSkills.remove(k)
-
-    for k in sorted_topSkills:
         v = topSkills[k]
 
         if v != 0:
             keys.append(k)
             values.append(v)
+
+    df = pd.DataFrame(columns = ['Skill', 'Count'])
+
+    for i in range(len(keys)):
+        num = (len(df) + 1)
+        df.loc[num] = [keys[i], values[i]]
+
+    dirtitle = title + '_TotalTopSkills.csv'
+    if not os.path.exists(csvSkillData):
+        os.mkdir(csvSkillData)
+
+    filenamelocation = os.path.join(csvSkillData, dirtitle)
+
+    df.to_csv(filenamelocation, encoding='utf-8')
 
     createBarChart('Total Top ' + title, keys, values, 'Names', 'Total Counts', 'Total Top ' + title)
     createPieChart('Total Top ' + title, keys, values, 'Total Top ' + title)
@@ -240,15 +251,25 @@ def writeTopSkillsPerState():
 
         sorted_topSkills = sorted(v, key=v.__getitem__, reverse=True)
 
-        for s in sorted_topSkills:
-            if topSkills[s] < minimumDisplayCount:
-                sorted_topSkills.remove(s)
-
         for k2 in sorted_topSkills:
             v2 = v[k2]
             if v2 != 0:
                 keys.append(k2)
                 values.append(v2)
+
+        df = pd.DataFrame(columns = ['Skill', 'Count'])
+
+        for i in range(len(keys)):
+            num = (len(df) + 1)
+            df.loc[num] = [keys[i], values[i]]
+
+        dirtitle = title + '_' + k + '_TopSkills.csv'
+        if not os.path.exists(csvSkillData):
+            os.mkdir(csvSkillData)
+
+        filenamelocation = os.path.join(csvSkillData, dirtitle)
+
+        df.to_csv(filenamelocation, encoding='utf-8')
 
         createBarChart('Top ' + title + '_' + k, keys, values, 'Names', 'Total Counts', 'Top  ' + title + ' in ' + k)
         createPieChart('Top ' + title + '_' + k, keys, values, 'Top ' + title + ' in ' + k)
@@ -258,12 +279,8 @@ def writeTopSkillsPerStateOneChart():
     Skills = []
     counts = []
 
-    
-    sorted_topSkills = sorted(topSkills, key=topSkills.__getitem__, reverse=True)
 
-    for k in sorted_topSkills:
-        if topSkills[k] < minimumDisplayCount:
-            sorted_topSkills.remove(k)
+    sorted_topSkills = sorted(topSkills, key=topSkills.__getitem__, reverse=True)
 
     for k, v in stateSkillsAll.items():
         keys = []
